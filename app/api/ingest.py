@@ -27,6 +27,10 @@ async def ingest_pdf(file: UploadFile = File(...), db: AsyncSession = Depends(ge
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Empty file")
 
+    # Limit file size to 10MB
+    if len(file_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+
     # Check for duplicate document
     content_hash = compute_hash(file_bytes)
     existing = await db.execute(

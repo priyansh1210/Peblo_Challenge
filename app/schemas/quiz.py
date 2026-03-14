@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from uuid import UUID
 from app.models.question import QuestionType, Difficulty
 
 
 class QuizGenerateRequest(BaseModel):
     document_id: UUID
-    num_questions: int = 5
+    num_questions: int = Field(default=5, ge=1, le=20)
     question_types: list[str] = ["mcq", "true_false", "fill_blank"]
     difficulty: str = "medium"
 

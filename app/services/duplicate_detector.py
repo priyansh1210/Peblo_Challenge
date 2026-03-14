@@ -1,8 +1,11 @@
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.question import QuizQuestion
 from app.services.embedding import generate_single_embedding
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 async def compute_question_embedding(question: QuizQuestion) -> list[float]:
@@ -67,7 +70,7 @@ async def check_duplicates(
                 unique.append(question)
 
         except Exception as e:
-            print(f"Duplicate check error: {e}")
+            logger.warning(f"Duplicate check error: {e}")
             unique.append(question)
 
     return unique, duplicates_removed

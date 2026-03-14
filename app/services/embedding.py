@@ -1,6 +1,9 @@
 import asyncio
+import logging
 from app.config import get_settings
 from app.services.llm_client import get_ollama_client
+
+logger = logging.getLogger(__name__)
 
 
 async def generate_embeddings(texts: list[str]) -> list[list[float]]:
@@ -18,7 +21,7 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
             )
             embeddings.append(result["embeddings"][0])
         except Exception as e:
-            print(f"Embedding error: {e}")
+            logger.warning(f"Embedding error: {e}")
             embeddings.append([0.0] * 768)
 
     return embeddings

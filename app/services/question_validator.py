@@ -1,11 +1,14 @@
 import json
 import re
 import asyncio
+import logging
 
 from app.config import get_settings
 from app.services.llm_client import get_ollama_client
 from app.models.question import QuizQuestion, QuestionType
 from app.prompts.quiz_prompts import build_validation_prompt
+
+logger = logging.getLogger(__name__)
 
 
 def structural_validation(question: QuizQuestion) -> tuple[bool, str]:
@@ -59,7 +62,7 @@ async def llm_quality_check(question: QuizQuestion) -> float:
             result = json.loads(match.group())
             return float(result.get("quality_score", 0.5))
     except Exception as e:
-        print(f"Quality check error: {e}")
+        logger.warning(f"Quality check error: {e}")
 
     return 0.5
 

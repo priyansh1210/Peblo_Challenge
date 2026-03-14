@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -10,12 +11,16 @@ from app.services.scoring import evaluate_answer
 from app.services.difficulty import resolve_adaptive_difficulty, get_student_accuracy
 from app.cache.cache import cache_invalidate
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.post("/submit-answer", response_model=AnswerSubmitResponse)
 async def submit_answer(request: AnswerSubmitRequest, db: AsyncSession = Depends(get_db)):
     """Submit a student answer and get feedback with adaptive difficulty."""
+
+    if not request.selected_answer.strip():
+        raise HTTPException(status_code=400, detail="Answer cannot be empty")
 
     # Fetch the question
     result = await db.execute(
@@ -40,11 +45,14 @@ async def submit_answer(request: AnswerSubmitRequest, db: AsyncSession = Depends
     await db.flush()
 
     # Get adaptive difficulty
-    new_difficulty = await resolve_adaptive_difficulty(
-        student_id=request.student_id,
-        requested_difficulty=question.difficulty.value,
-        db=db,
-    )
+    try:
+        new_difficulty = await resolve_adaptive_difficulty(
+            student_id=request.student_id,
+            requested_difficulty=question.difficulty.value,
+            db=db,
+        )
+    except ValueError:
+        new_difficulty = question.difficulty.value
 
     # Get student accuracy
     accuracy = await get_student_accuracy(request.student_id, db)
