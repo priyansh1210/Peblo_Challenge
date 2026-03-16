@@ -57,6 +57,13 @@ def _parse_json_response(text: str) -> list[dict]:
     raise json.JSONDecodeError("Could not parse any valid questions", text, 0)
 
 
+def _has_bare_letter_options(options: list | None) -> bool:
+    """Check if MCQ options are just bare letters like ['A', 'B', 'C', 'D']."""
+    if not options:
+        return False
+    return all(len(opt.strip()) <= 2 for opt in options)
+
+
 def _map_question_type(type_str: str) -> QuestionType:
     mapping = {
         "mcq": QuestionType.MCQ,
@@ -132,18 +139,24 @@ async def generate_quiz_questions(
             if attempt == 2:
                 raise ValueError(f"Failed to generate valid quiz after 3 attempts: {e}")
 
-    # Map to QuizQuestion models
+    # Map to QuizQuestion models, filtering out bare-letter MCQ options
     questions = []
     for i, q_data in enumerate(raw_questions):
         chunk = chunks[i % len(chunks)]
+        q_type = _map_question_type(q_data.get("type", "mcq"))
+        options = q_data.get("options")
+
+        # Skip MCQs where the LLM returned bare letters instead of full-text options
+        if q_type == QuestionType.MCQ and _has_bare_letter_options(options):
+            continue
 
         question = QuizQuestion(
             id=uuid.uuid4(),
             chunk_id=chunk.id,
-            question_type=_map_question_type(q_data.get("type", "mcq")),
+            question_type=q_type,
             difficulty=_map_difficulty(q_data.get("difficulty", difficulty)),
             question_text=q_data["question_text"],
-            options=q_data.get("options"),
+            options=options,
             correct_answer=q_data["correct_answer"],
             explanation=q_data.get("explanation"),
         )

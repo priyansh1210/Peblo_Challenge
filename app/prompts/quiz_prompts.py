@@ -1,56 +1,23 @@
 def build_quiz_prompt(context: str, num_questions: int, question_types: list[str], difficulty: str, grade: int | None = None) -> str:
-    grade_info = f"These questions are for Grade {grade} students." if grade else ""
+    grade_info = f" for Grade {grade} students" if grade else ""
 
-    type_instructions = []
-    if "mcq" in question_types:
-        type_instructions.append(
-            '- MCQ: Include "type": "mcq", "options" (exactly 4 choices as a list), and "correct_answer" (must be one of the options)'
-        )
-    if "true_false" in question_types:
-        type_instructions.append(
-            '- True/False: Include "type": "true_false", "options": ["True", "False"], and "correct_answer" ("True" or "False")'
-        )
-    if "fill_blank" in question_types:
-        type_instructions.append(
-            '- Fill in the blank: Include "type": "fill_blank", "options": null, and "correct_answer" (the word/phrase that fills the blank). The question_text MUST contain "___" where the blank is.'
-        )
+    type_list = ", ".join(question_types)
 
-    types_str = "\n".join(type_instructions)
+    return f"""Generate {num_questions} {difficulty} quiz questions{grade_info} from this content. Mix these types: {type_list}.
 
-    return f"""You are an expert educational content creator. Generate exactly {num_questions} quiz questions from the following educational content.
-
-{grade_info}
-
-Difficulty level: {difficulty}
-- easy: Simple recall questions, basic facts
-- medium: Understanding and application questions
-- hard: Analysis, comparison, and critical thinking questions
-
-Question types to generate (mix them evenly):
-{types_str}
-
-CONTENT:
-\"\"\"
+Content:
 {context}
-\"\"\"
 
-IMPORTANT RULES:
-1. Questions MUST be directly based on the provided content only
-2. Each question must be clear, unambiguous, and age-appropriate
-3. For MCQ, all 4 options must be plausible but only one correct
-4. Provide a brief explanation for each answer
-5. Return ONLY a valid JSON array, no other text. Do NOT include any trailing commas. Keep strings on single lines.
+Rules:
+- MCQ: 4 options with FULL answer text (not just letters), correct_answer must match one option exactly
+- true_false: options ["True", "False"], correct_answer is "True" or "False"
+- fill_blank: question_text must have "___", options is null
 
-Return a JSON array with this exact structure:
+Return ONLY a JSON array like this:
 [
-  {{
-    "question_text": "...",
-    "type": "mcq|true_false|fill_blank",
-    "options": ["A", "B", "C", "D"] or ["True", "False"] or null,
-    "correct_answer": "...",
-    "explanation": "...",
-    "difficulty": "{difficulty}"
-  }}
+  {{"question_text": "How many sides does a triangle have?", "type": "mcq", "options": ["2 sides", "3 sides", "4 sides", "5 sides"], "correct_answer": "3 sides", "explanation": "A triangle has 3 sides.", "difficulty": "{difficulty}"}},
+  {{"question_text": "A square has four equal sides.", "type": "true_false", "options": ["True", "False"], "correct_answer": "True", "explanation": "A square has four equal sides by definition.", "difficulty": "{difficulty}"}},
+  {{"question_text": "5 + 3 = ___", "type": "fill_blank", "options": null, "correct_answer": "8", "explanation": "5 plus 3 equals 8.", "difficulty": "{difficulty}"}}
 ]"""
 
 

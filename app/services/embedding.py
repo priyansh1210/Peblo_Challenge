@@ -22,7 +22,7 @@ async def generate_embeddings(texts: list[str]) -> list[list[float]]:
             embeddings.append(result["embeddings"][0])
         except Exception as e:
             logger.warning(f"Embedding error: {e}")
-            embeddings.append([0.0] * 768)
+            embeddings.append([0.0] * 2048)
 
     return embeddings
 

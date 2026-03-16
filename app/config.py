@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
-    OLLAMA_MODEL: str = "llama3.1:8b"
+    OLLAMA_MODEL: str = "llama3.2:3b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/peblo_db"
     REDIS_URL: str = "redis://localhost:6379/0"
